@@ -30,6 +30,20 @@ func NewDict(pairs ...interface{}) (*Dict, error) {
 	return d, nil
 }
 
+func FromKeys(keys []interface{}, value interface{}) *Dict {
+	d := &Dict{
+		Keys:   make([]interface{}, len(keys)),
+		Values: make([]interface{}, len(keys)),
+	}
+
+	copy(d.Keys, keys)
+	for i := range d.Values {
+		d.Values[i] = value
+	}
+
+	return d
+}
+
 func (d *Dict) Get(key interface{}) (interface{}, error) {
 	index := d.findIndex(key)
 	if index == -1 {
@@ -118,6 +132,51 @@ func (d *Dict) Update(other *Dict) *Dict {
 	return d
 }
 
+func (d *Dict) Merge(other *Dict) *Dict {
+	result := &Dict{
+		Keys:   make([]interface{}, len(d.Keys)),
+		Values: make([]interface{}, len(d.Values)),
+	}
+
+	copy(result.Keys, d.Keys)
+	copy(result.Values, d.Values)
+
+	for i, key := range other.Keys {
+		result.Set(key, other.Values[i])
+	}
+
+	return result
+}
+
+func (d *Dict) Pop(key interface{}) (interface{}, error) {
+	index := d.findIndex(key)
+	if index == -1 {
+		return nil, fmt.Errorf("key %v not found", key)
+	}
+
+	value := d.Values[index]
+
+	d.Keys = append(d.Keys[:index], d.Keys[index+1:]...)
+	d.Values = append(d.Values[:index], d.Values[index+1:]...)
+
+	return value, nil
+}
+
+func (d *Dict) PopItem() (interface{}, interface{}, error) {
+	if len(d.Keys) == 0 {
+		return nil, nil, fmt.Errorf("dictionary is empty")
+	}
+
+	lastIndex := len(d.Keys) - 1
+	key := d.Keys[lastIndex]
+	value := d.Values[lastIndex]
+
+	d.Keys = d.Keys[:lastIndex]
+	d.Values = d.Values[:lastIndex]
+
+	return key, value, nil
+}
+
 func (d *Dict) findIndex(key interface{}) int {
 	for i, k := range d.Keys {
 		if reflect.DeepEqual(k, key) {
@@ -125,4 +184,20 @@ func (d *Dict) findIndex(key interface{}) int {
 		}
 	}
 	return -1
+}
+
+func (d *Dict) Filter(filterFunc func(key, value interface{}) bool) *Dict {
+	result := &Dict{
+		Keys:   []interface{}{},
+		Values: []interface{}{},
+	}
+
+	for i, key := range d.Keys {
+		if filterFunc(key, d.Values[i]) {
+			result.Keys = append(result.Keys, key)
+			result.Values = append(result.Values, d.Values[i])
+		}
+	}
+
+	return result
 }

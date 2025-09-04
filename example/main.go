@@ -52,4 +52,31 @@ func main() {
 	otherDict, _ := ezarr.NewDict("email", "puer@example.com", "age", 18)
 	dict.Update(otherDict)
 	fmt.Println("After update from other dict:", dict)
+	
+	dict1, _ := ezarr.NewDict("a", 1, "b", 2)
+	dict2, _ := ezarr.NewDict("b", 3, "c", 4)
+	merged := dict1.Merge(dict2)
+	fmt.Println("dict1:", dict1)
+	fmt.Println("dict2:", dict2)
+	fmt.Println("Merged dict:", merged)
+	
+	value, _ := dict.Pop("email")
+	fmt.Println("Popped 'email':", value)
+	fmt.Println("Dict after pop:", dict)
+	
+	key, val, _ := dict.PopItem()
+	fmt.Println("PopItem result - Key:", key, "Value:", val)
+	fmt.Println("Dict after popItem:", dict)
+	
+	keys := []interface{}{"x", "y", "z"}
+	dictFromKeys := ezarr.FromKeys(keys, 0)
+	fmt.Println("Dict from keys:", dictFromKeys)
+	
+	numDict, _ := ezarr.NewDict("a", 1, "b", 2, "c", 3, "d", 4)
+	evenDict := numDict.Filter(func(key, value interface{}) bool {
+		num, ok := value.(int)
+		return ok && num%2 == 0
+	})
+	fmt.Println("Original numDict:", numDict)
+	fmt.Println("Filtered even values:", evenDict)
 }
